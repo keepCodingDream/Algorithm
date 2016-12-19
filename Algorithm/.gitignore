@@ -1,1 +1,10 @@
-/bin/
+/.project
+/.classpath
+/.settings
+
+/target/
+/sdklog/
+
+/.idea
+*.class
+*.iml
