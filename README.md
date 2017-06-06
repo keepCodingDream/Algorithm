@@ -1,2 +1,7 @@
 # Algorithm
-Personal code test
+
+主要是一些常用算法的实现。
+
+1.快速排序、堆排序
+2.动态代理、CGLib动态代理
+3.梯度下降
