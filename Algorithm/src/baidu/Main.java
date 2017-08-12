@@ -1,147 +1,269 @@
 package baidu;
 
-import java.util.Scanner;
+import java.util.*;
 
 /**
- * 百度之星大赛第4题
+ * 复赛第一题
  *
  * @author tracy.
- * @create 2017-08-06 00:27
+ * @create 2017-08-12 14:07
  **/
 public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        int no = sc.nextInt();
-        for (int count = 1; count <= no; count++) {
-            int maxMoney = sc.nextInt();
-            int nu_of_cookie = sc.nextInt();
-            int cookie[][] = new int[nu_of_cookie + 1][2];
-            sc.nextLine();
-            for (int i = 1; i <= nu_of_cookie; i++) {
-                String value = sc.nextLine();
-                String[] MN = value.split("\\s+");
-                cookie[i][0] = Integer.valueOf(MN[0]);//score
-                cookie[i][1] = Integer.valueOf(MN[1]);//cost
+        while (true) {
+            String nm = sc.nextLine();
+            int n = Integer.valueOf(nm.split(" ")[0]);
+            int m = Integer.valueOf(nm.split(" ")[1]);
+            int draw[][] = new int[n][m];
+            Character a = '0';
+            for (int i = 0; i < n; i++) {
+                String lineItem = sc.nextLine();
+                for (int j = 0; j < m; j++) {
+                    draw[i][j] = a.equals(lineItem.charAt(j)) ? 0 : 1;
+                }
             }
-            if (maxMoney > 0) {
-                //F[i][v]=max(F[i-1][v],F[i-1][v-c[i]]+w[i])
-                //v=预算,c[i]=第i个菜的价格,w[i]=第i个菜的得分
-                int function[][] = new int[nu_of_cookie + 1][maxMoney + 1];
-                //代表第i物品选择时，背包里的物品.index_1=i个物品;index_2=x容量;index_3=[1,2,3]背包里的物品
-                String[][] path = new String[nu_of_cookie + 1][maxMoney + 1];
-                for (int i = 1; i <= nu_of_cookie; i++) {
-                    for (int j = 1; j <= maxMoney; j++) {
-                        if (i == 1) {
-                            if (cookie[i][1] > j) {
-                                function[i][j] = 0;
-                            } else {
-                                function[i][j] = cookie[i][0];
-                                path[i][j] = i + " ";
-                            }
+            boolean isOne = true;
+            for (int i = 0; i < n; i++) {
+                boolean flag = false;
+                int status = 0;
+                int start = draw[i][0];
+                int willCheckIndex[][] = new int[n][m];
+                int indexCount = 0;
+                int length_change_count = 0;//行变更统计
+                for (int j = 1; j < m; j++) {
+                    if (draw[i][j] == 1) {
+                        willCheckIndex[i][indexCount++] = j;
+                    }
+                    if (draw[i][j] != start) {
+                        start = draw[i][j];
+                        length_change_count++;
+                    }
+                }
+                if (i > 0 && isOne && status > 0) {
+                    int same = illegal(willCheckIndex[i - 1], willCheckIndex[i]);
+                    if (same != 1) {
+                        isOne = false;
+                        break;
+                    }
+                }
+                int first = draw[i][0];
+                if (length_change_count > 2) {
+                    isOne = false;
+                    break;
+                }
+                if (status == 0) {
+                    if (first == 0) {
+                        if (length_change_count == 0) {
+                            //do nothing
+                        } else if (length_change_count > 0) {
+                            status = 1;
+                        }
+                    } else {
+                        if (length_change_count == 2) {
+                            isOne = false;
+                            break;
                         } else {
-                            function[i][j] = function[i - 1][j];
-                            path[i][j] = path[i - 1][j];
-                            if (path[i][j] == null) {
-                                path[i][j] = "";
-                            }
-                            if (j - cookie[i][1] >= 0) {
-                                function[i][j] = Math.max(function[i - 1][j], function[i - 1][j - cookie[i][1]] + cookie[i][0]);
-                                if (function[i][j] > function[i - 1][j]) {
-                                    path[i][j] = path[i - 1][j - cookie[i][1]];
-                                    if (path[i][j] == null) {
-                                        path[i][j] = "";
-                                    }
-                                    path[i][j] += i + " ";
-                                } else {
-                                    //除了大，就是等于，所以这里需要判断字典
-                                    String newOrder = path[i - 1][j - cookie[i][1]];
-                                    if (newOrder == null) {
-                                        newOrder = "";
-                                    }
-                                    newOrder += i + " ";
-                                    if (judgeDirect(path[i][j], newOrder)) {
-                                        path[i][j] = newOrder;
-                                    }
-                                }
-                            }
+                            status = 1;
                         }
                     }
-                }
-                // 数组右下角就是最大值
-                int maxValue = function[nu_of_cookie][maxMoney];
-                String final_order = null;
-                for (int i = 1; i <= nu_of_cookie; i++) {
-                    for (int j = 1; j <= maxMoney; j++) {
-                        if (function[i][j] == maxValue) {
-                            String order = path[i][j];
-                            if (final_order == null || "".equals(final_order)) {
-                                final_order = order.trim();
-                            } else if (judgeDirect(final_order, order)) {
-                                final_order = order;
-                            }
+                } else if (status == 1) {
+                    if (first == 0) {
+                        if (length_change_count == 0) {
+                            status = 2;
+                        }
+                    } else {
+                        if (length_change_count == 2) {
+                            isOne = false;
+                            break;
                         }
                     }
-                }
-                System.out.println("Case #" + count + ":");
-                int total_value = 0;
-                if (final_order != null && !"".equals(final_order)) {
-                    String[] orderInt = final_order.trim().split("\\s+");
-                    for (String item : orderInt) {
-                        if (item != null && !"".equals(item)) {
-                            total_value += cookie[Integer.valueOf(item)][1];
+                } else if (status == 2) {
+                    if (first == 0) {
+                        if (length_change_count != 0) {
+                            isOne = false;
+                            break;
                         }
+                    } else {
+                        isOne = false;
+                        break;
                     }
                 }
-                System.out.println(function[nu_of_cookie][maxMoney] + " " + total_value);
-                if (final_order != null && !"".equals(final_order)) {
-                    System.out.println(final_order);
-                }
-            } else {
-                System.out.println("Case #" + count + ":");
-                int total_score = 0;
-                String step = "";
-                for (int i = 1; i <= nu_of_cookie; i++) {
-                    if (cookie[i][1] == 0) {
-                        total_score += cookie[i][0];
-                        step += i + " ";
-                    }
-                }
-                System.out.println(total_score + " " + 0);
-                if (!"".equals(step)) {
-                    System.out.println(step.trim());
+                if (!isOne) {
+                    break;
                 }
             }
+            if (isOne) {
+                System.out.println(1);
+                continue;
+            }
+            //judge 0
+            boolean isTwo = true;
+            int j_changeCount = 0;
+            int latest_status = 0;//关注行，变化量0->没变化；1->"1"状态；2->"0"状态;3->"1"状态
+            boolean allow_zero_or_one = true;//是否再允许变成0/1
+            int willCheckIndex[][] = new int[n][m];
+            for (int i = 0; i < n; i++) {
+                int start = draw[i][0];
+                int firstChart = draw[i][0];//每行第一个字符
+                int length_change_count = 0;//行变更统计
+                int indexCount = 0;
+                if (start == 1) {
+                    willCheckIndex[i][indexCount++] = 0;
+                }
+                boolean legal = false;//行是否判断过合法
+                for (int j = 1; j < m; j++) {
+                    if (draw[i][j] == 1) {
+                        willCheckIndex[i][indexCount++] = j;
+                    }
+                    if (draw[i][j] != start) {
+                        start = draw[i][j];
+                        length_change_count++;
+                    }
+                }
+                if (i > 0) {
+                    int sameCount = illegal(willCheckIndex[i - 1], willCheckIndex[i]);
+                    //"1"出现以后，只要sameCount!=0且不大于2
+                    if (sameCount != 1 && sameCount != 2 && latest_status > 0) {
+                        isTwo = false;
+                        break;
+                    }
+                }
+                //如果上一个状态是0，代表还没有"1"状态出现
+                if (latest_status == 0) {
+                    //如果第一个字符是0的话(统计变化量可以看出是0还是1)
+                    if (firstChart == 0) {
+                        if (length_change_count == 2) {
+                            latest_status = 1;//代表第一个1出现
+                        } else if (length_change_count != 0) {
+                            //1还没有出现，不能出现0
+                            isTwo = false;
+                            break;
+                        }
+                    } else {
+                        if (length_change_count <= 1) {
+                            latest_status = 1;
+                        } else {
+                            //只要第一个字符是"1"，变化超过一次就是0了
+                            isTwo = false;
+                            break;
+                        }
+                    }
+                } else if (latest_status == 1) {
+                    //如果第一个字符是0的话(统计变化量可以看出是0还是1)
+                    if (firstChart == 0) {
+                        if (length_change_count == 2) {
+                            //do nothing
+                        } else if (length_change_count != 4) {
+                            //1出现了，不能再出现全0,不等于4就是全0
+                            isTwo = false;
+                            break;
+                        } else {
+                            latest_status = 2;
+                        }
+                    } else {
+                        if (length_change_count <= 1) {
+                            //表示还是1，可以继续
+                        } else if (length_change_count < 4) {
+                            //2\3都可以表示成"0"
+                            latest_status = 2;
+                        } else {
+                            isTwo = false;
+                            break;
+                        }
+                    }
+                } else if (latest_status == 2) {
+                    if (firstChart == 0) {
+                        if (length_change_count == 2) {
+                            //又变成1
+                            latest_status = 3;
+                        } else if (length_change_count != 4) {
+                            //不等于4代表不是"0"，不是0又不是1，非法
+                            isTwo = false;
+                            break;
+                        }
+                    } else {
+                        if (length_change_count <= 1) {
+                            //表示是1，切状态
+                            latest_status = 3;
+                        } else if (length_change_count < 4) {
+                            //2\3都可以表示成"0"
+                            // do nothings
+                        } else {
+                            isTwo = false;
+                            break;
+                        }
+                    }
+                } else if (latest_status == 3) {
+                    //又变回了1
+                    if (firstChart == 0) {
+                        if (length_change_count == 2) {
+                            //又变成1
+                            //允许
+                        } else if (length_change_count == 0) {
+                            //从1变回0
+                            latest_status = 4;
+                        } else {
+                            //不是1就非法
+                            isTwo = false;
+                            break;
+                        }
+                    } else {
+                        if (length_change_count > 1) {
+                            isTwo = false;
+                            break;
+                        }
+                    }
+                } else {
+                    if (firstChart == 0) {
+                        if (length_change_count != 0) {
+                            isTwo = false;
+                            break;
+                        }
+                    } else {
+                        isTwo = false;
+                        break;
+                    }
+                }
+
+            }
+            if (isTwo) {
+                System.out.println(0);
+                continue;
+            }
+            System.out.println(-1);
         }
     }
 
-    private static boolean judgeDirect(String a, String b) {
-        String[] aInt = a.trim().split("\\s+");
-        String[] bInt = b.trim().split("\\s+");
-        int countA = 0;
-        int countB = 0;
-        for (String item : aInt) {
-            if (item != null && !"".equals(item)) {
-                countA += Integer.valueOf(item);
+    private static int illegal(int before[], int after[]) {
+        Map<Integer, Boolean> compareMap = new HashMap<Integer, Boolean>();
+        List<Integer> same = new ArrayList<Integer>();
+        for (int i = 0; i < before.length; i++) {
+            compareMap.put(before[i], true);
+        }
+        for (int i = 0; i < after.length; i++) {
+            if (compareMap.containsKey(after[i])) {
+                same.add(after[i]);
             }
         }
-        for (String item : bInt) {
-            if (item != null && !"".equals(item)) {
-                countB += Integer.valueOf(item);
-            }
+        int success = 0;
+        boolean flag = true;
+        if (same.size() == 0) {
+            return 0;
         }
-        //当后面字符串小于前面字符串，表名需要替换，返回true
-        if (countB < countA) {
-            return true;
-        } else if (countA == countB) {
-            if (aInt.length < bInt.length) {
-                return true;
-            } else if (aInt.length > bInt.length) {
-                return false;
+        int start = same.get(0);
+        for (int i = 1; i < same.size(); i++) {
+            if (same.get(i) == start + 1) {
+                if (flag) {
+                    flag = false;
+                    success++;
+                }
             } else {
-                return a.trim().compareTo(b.trim()) < 0;
+                flag = true;
             }
-        } else {
-            return false;
+            start = same.get(i);
         }
+        return success;
     }
+
 }
