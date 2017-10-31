@@ -1,6 +1,6 @@
 ## 算法目录介绍
 
-package [sub] detail
+### package [class] algorithm name
 
 `cglib` `[null]` —— cglib dynamic proxy
 
